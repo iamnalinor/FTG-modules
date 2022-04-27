@@ -59,7 +59,7 @@ class LavhostManagerMod(loader.Module):
         "web_link_inline_button": "🔑 Login",
         "confirm": "📤 Send anyway",
         "cancel": "🚫 Cancel",
-        "expires": "📅 <b>Your lavHost subscription expires at <u>{time1}, {time2}</u> (<code>{date}</code>)</b>",
+        "expires": "📅 <b>Your lavHost subscription expires in <u>{time1}, {time2}</u> (<code>{date}</code>)</b>",
         "days_one": "{x} days",
         "days_few": "{x} days",
         "days_many": "{x} days",
