@@ -311,15 +311,13 @@ class LavhostManagerMod(loader.Module):
 
     async def linfocmd(self, message: Message):
         """Get your lavHost info"""
-        m = await utils.answer(message, self.strings("loading"))
-
         try:
             info = (await message.client.inline_query(self._bot, "", entity="me"))[
                 3
             ].message.message
         except TypeError:
             return await utils.answer(
-                m, self.strings("not_registered").format(bot_username=self._bot)
+                message, self.strings("not_registered").format(bot_username=self._bot)
             )
 
         plan = self.strings(
@@ -344,13 +342,12 @@ class LavhostManagerMod(loader.Module):
 
         if hasattr(self, "inline") and await self.inline.form(
             text,
-            message=m,
+            message=message,
             reply_markup={
                 "text": self.strings("support_chat"),
                 "url": "https://t.me/lavhostchat",
             },
-            silent=True,
         ):
             return
 
-        await utils.answer(m, text)
+        await utils.answer(message, text)
