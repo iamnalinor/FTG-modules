@@ -77,6 +77,7 @@ class LavhostManagerMod(loader.Module):
         "location_F": "Frankfurt",
         "location_D": "Dubai",
         "location_N": "Netherlands",
+        "location_A": "Amsterdam",
         "information": (
             "📃 <b>Your lavHost information</b>\n\n"
             "🐶 <b>Username:</b> <code>{username}</code>\n"
@@ -134,6 +135,7 @@ class LavhostManagerMod(loader.Module):
         "location_F": "Франкфурт",
         "location_D": "Дубаи",
         "location_N": "Нидерланды",
+        "location_A": "Амстердам",
         "information": (
             "📃 <b>Твоя информация на lavHost</b>\n\n"
             "🐶 <b>Юзернейм:</b> <code>{username}</code>\n"
