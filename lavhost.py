@@ -32,11 +32,12 @@ with suppress(ImportError):
     from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 
+# noinspection PyCallingNonCallable,PyAttributeOutsideInit
 @loader.tds
 class LavhostManagerMod(loader.Module):
     """Simple @lavHost manager"""
 
-    strings: Callable[[str], str] = {
+    strings = {
         "name": "lavHost",
         "not_registered": "🚫 <b>You haven't registered in {bot_username}</b>",
         "loading": "🔍 <b>Loading...</b>",
@@ -78,6 +79,7 @@ class LavhostManagerMod(loader.Module):
         "location_D": "Dubai",
         "location_N": "Netherlands",
         "location_A": "Amsterdam",
+        "location_L": "London",
         "information": (
             "📃 <b>Your lavHost information</b>\n\n"
             "🐶 <b>Username:</b> <code>{username}</code>\n"
@@ -136,6 +138,7 @@ class LavhostManagerMod(loader.Module):
         "location_D": "Дубаи",
         "location_N": "Нидерланды",
         "location_A": "Амстердам",
+        "location_L": "Лондон",
         "information": (
             "📃 <b>Твоя информация на lavHost</b>\n\n"
             "🐶 <b>Юзернейм:</b> <code>{username}</code>\n"
