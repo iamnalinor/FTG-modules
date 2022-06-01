@@ -14,26 +14,31 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# meta developer: </code>@nalinormods<code>
+# meta developer: @nalinormods
 # requires: matplotlib
 
 from contextlib import suppress
 from io import BytesIO
+from typing import Awaitable
 
 import matplotlib.pyplot as plt
 from telethon import TelegramClient
+from telethon.hints import EntityLike
 from telethon.tl.custom import Message
-from telethon.tl.types import MessageEmpty, MessageService
+from telethon.tl.types import MessageEmpty
+from telethon.tl.functions.channels import JoinChannelRequest
 
 from .. import loader, utils
 
 
+# noinspection PyCallingNonCallable,PyAttributeOutsideInit
 @loader.tds
 class MessagingRateMod(loader.Module):
     """Show chat activity, counted in MpH (messages per hour)"""
 
     strings = {
         "name": "MsgRate",
+        "author": "@nalinormods",
         "channels_only": "🚫 <b>This command can be executed only in groups and channels</b>",
         "unable_first_msg": "🚫 <b>Unable to retrieve first message</b>",
         "mph_for": "🔢 <b>MpH for {title}: {count}</b>",
@@ -42,7 +47,6 @@ class MessagingRateMod(loader.Module):
         "messages_count": "Messages count",
         "mph": "MpH",
         "stats_for_chat": "MpH stats for chat {title}",
-        "made_by": "<b>Made by {channel} with ❤️</b>",
     }
 
     strings_ru = {
@@ -57,11 +61,17 @@ class MessagingRateMod(loader.Module):
         "messages_count": "Количество сообщений",
         "mph": "MpH",
         "stats_for_chat": "Статистика MpH для чата {title}",
-        "made_by": "<b>Сделано {channel} с ❤️</b>",
     }
+
+    async def on_dlmod(self, client: TelegramClient, _):
+        await client(JoinChannelRequest(channel=self.strings("author")))
+
+    async def client_ready(self, client: TelegramClient, _):
+        self._client = client
 
     @staticmethod
     def calc_mph(msg1: Message, msg2: Message) -> float:
+        """Calculates MpH value for range between two messages"""
         count = msg2.id - msg1.id
         hours = (msg2.date - msg1.date).total_seconds() / 3600
 
@@ -69,6 +79,7 @@ class MessagingRateMod(loader.Module):
 
     @staticmethod
     def get_chat_id(message: Message) -> int:
+        """Get chat_id from given message"""
         args = utils.get_args(message)
         if args and len(args[-1]) > 3:
             chat_id = args[-1]
@@ -79,15 +90,16 @@ class MessagingRateMod(loader.Module):
 
         return chat_id
 
-    @staticmethod
-    async def get_last_msg(client: TelegramClient, chat_id: int) -> Message:
-        async for message in client.iter_messages(chat_id, limit=1):
-            return message
+    def get_last_msg(
+        self, chat_id: EntityLike, reverse: bool = False
+    ) -> Awaitable[Message]:
+        """Gets last or first message in chat"""
+        return self._client.iter_messages(chat_id, limit=1, reverse=reverse).__anext__()
 
     async def msgratecmd(self, message: Message):
         """<chat id/username/current> — Show MpH for chat"""
         chat_id = self.get_chat_id(message)
-        last_msg = await self.get_last_msg(message.client, chat_id)
+        last_msg = await self.get_last_msg(chat_id)
 
         if not last_msg.is_channel:
             return await utils.answer(message, self.strings("channels_only"))
@@ -95,9 +107,7 @@ class MessagingRateMod(loader.Module):
         if (reply := await message.get_reply_message()) and chat_id == message.chat_id:
             msg = reply
         else:
-            msg = await message.client.get_messages(chat_id, ids=1)
-            if not isinstance(msg, MessageService):
-                return await utils.answer(message, self.strings("unable_first_msg"))
+            msg = await self.get_last_msg(chat_id, reverse=True)
 
         await utils.answer(
             message,
@@ -110,7 +120,7 @@ class MessagingRateMod(loader.Module):
     async def msgstatcmd(self, message: Message):
         """<r|g|b> <chat id/username/current> — Show chat MpH statistics"""
         chat_id = self.get_chat_id(message)
-        last_msg = await self.get_last_msg(message.client, chat_id)
+        last_msg = await self.get_last_msg(chat_id)
 
         args = utils.get_args(message)
         if args and len(args[0]) <= 3:
@@ -121,14 +131,14 @@ class MessagingRateMod(loader.Module):
         if not last_msg.is_channel:
             return await utils.answer(message, self.strings("channels_only"))
 
-        if last_msg.id < 500:
+        if last_msg.id < 200:
             return await utils.answer(message, self.strings("chat_small"))
 
         m = await utils.answer(message, self.strings("calculating"))
 
         messages = list(
             filter(
-                lambda m: m and not isinstance(m, MessageEmpty),
+                lambda msg: msg and not isinstance(msg, MessageEmpty),
                 await message.client.get_messages(
                     chat_id,
                     ids=[int(last_msg.id / 200) * count + 1 for count in range(200)],
@@ -162,13 +172,12 @@ class MessagingRateMod(loader.Module):
 
         stream = BytesIO()
         stream.name = "stats.png"
-        plt.savefig(stream)
+        await utils.run_sync(plt.savefig, (stream,))
         stream.seek(0)
         plt.close(fig)
 
         await message.client.send_file(
             message.chat_id,
             stream,
-            caption=self.strings("made_by").format(channel="@nalinormods"),
         )
         await m.delete()
