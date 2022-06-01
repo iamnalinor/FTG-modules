@@ -19,7 +19,7 @@
 import logging
 import re
 import time
-from typing import List, Tuple
+from typing import List
 
 from telethon import TelegramClient
 from telethon.hints import Entity
