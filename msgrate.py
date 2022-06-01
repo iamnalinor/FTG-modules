@@ -172,7 +172,7 @@ class MessagingRateMod(loader.Module):
 
         stream = BytesIO()
         stream.name = "stats.png"
-        await utils.run_sync(plt.savefig, (stream,))
+        await utils.run_sync(plt.savefig, stream)
         stream.seek(0)
         plt.close(fig)
 
