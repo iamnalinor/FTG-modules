@@ -19,7 +19,7 @@
 import logging
 import re
 import time
-from typing import List
+from typing import List, Any
 
 from telethon import TelegramClient
 from telethon.hints import Entity
@@ -64,7 +64,8 @@ def get_link(user: Entity) -> str:
     )
 
 
-def plural_number(n):
+def plural_number(n: int) -> str:
+    """Pluralize number `n`"""
     return (
         "one"
         if n % 10 == 1 and n % 100 != 11
@@ -94,16 +95,16 @@ class SwmuteMod(loader.Module):
         "muted_users": "📃 <b>Swmuted users at the moment:</b>\n{names}",
         "cleared": "🧹 <b>Cleared mutes in this chat</b>",
         "cleared_all": "🧹 <b>Cleared all mutes</b>",
-        "s_one": "seconds",
+        "s_one": "second",
         "s_few": "seconds",
         "s_many": "seconds",
-        "m_one": "minutes",
+        "m_one": "minute",
         "m_few": "minutes",
         "m_many": "minutes",
-        "h_one": "hours",
+        "h_one": "hour",
         "h_few": "hours",
         "h_many": "hours",
-        "d_one": "days",
+        "d_one": "day",
         "d_few": "days",
         "d_many": "days",
     }
@@ -144,9 +145,22 @@ class SwmuteMod(loader.Module):
         await client(JoinChannelRequest(channel=self.strings("author")))
 
     async def client_ready(self, client: TelegramClient, db):
-        self._db = db
+        self.client = client
+        self.db = db
 
-        self._cleanup()
+        # db migration
+        if mutes := db.get("swmute", "mutes"):
+            self.set("mutes", mutes)
+
+        self.cleanup()
+
+    def get(self, key: str, default: Any = None):
+        """Get value from database"""
+        return self.db.get(self.strings("name"), key, default)
+
+    def set(self, key: str, value: Any):
+        """Set value in database"""
+        return self.db.set(self.strings("name"), key, value)
 
     def format_time(self, seconds: int, max_words: int = None) -> str:
         """Format time to human-readable variant"""
@@ -169,49 +183,49 @@ class SwmuteMod(loader.Module):
 
         return " ".join(words)
 
-    def _mute(self, chat_id: int, user_id: int, until_time: int = 0):
+    def mute(self, chat_id: int, user_id: int, until_time: int = 0):
         """Add user to mute list"""
         chat_id = str(chat_id)
         user_id = str(user_id)
 
-        mutes = self._db.get("swmute", "mutes")
+        mutes = self.get("mutes", {})
         mutes.setdefault(chat_id, {})
         mutes[chat_id][user_id] = until_time
-        self._db.set("swmute", "mutes", mutes)
+        self.set("mutes", mutes)
 
         logger.debug(f"Muted user {user_id} in chat {chat_id}")
 
-    def _unmute(self, chat_id: int, user_id: int):
+    def unmute(self, chat_id: int, user_id: int):
         """Remove user from mute list"""
         chat_id = str(chat_id)
         user_id = str(user_id)
 
-        mutes = self._db.get("swmute", "mutes")
+        mutes = self.get("mutes", {})
         if chat_id in mutes and user_id in mutes[chat_id]:
             mutes[chat_id].pop(user_id)
-        self._db.set("swmute", "mutes", mutes)
+        self.set("mutes", mutes)
 
         logger.debug(f"Unmuted user {user_id} in chat {chat_id}")
 
-    def _get_mutes(self, chat_id: int) -> List[int]:
+    def get_mutes(self, chat_id: int) -> List[int]:
         """Get current mutes for specified chat"""
         return [
             int(user_id)
-            for user_id, until_time in self._db.get("swmute", "mutes", {})
+            for user_id, until_time in self.get("mutes", {})
             .get(str(chat_id), {})
             .items()
             if until_time > time.time() or until_time == 0
         ]
 
-    def _get_mute_time(self, chat_id: int, user_id: int) -> int:
+    def get_mute_time(self, chat_id: int, user_id: int) -> int:
         """Get mute expiration timestamp"""
-        return self._db.get("swmute", "mutes").get(str(chat_id), {}).get(str(user_id))
+        return self.get("mutes", {}).get(str(chat_id), {}).get(str(user_id))
 
-    def _cleanup(self):
-        """Clear all expired mutes"""
+    def cleanup(self):
+        """Cleanup expired mutes"""
         mutes = {}
 
-        for chat_id, chat_mutes in self._db.get("swmute", "mutes", {}).items():
+        for chat_id, chat_mutes in self.get("mutes", {}).items():
             if new_chat_mutes := {
                 user_id: until_time
                 for user_id, until_time in chat_mutes.items()
@@ -219,16 +233,16 @@ class SwmuteMod(loader.Module):
             }:
                 mutes[chat_id] = new_chat_mutes
 
-        self._db.set("swmute", "mutes", mutes)
+        self.set("mutes", mutes)
 
-    def _clear_mutes(self, chat_id: int = None):
+    def clear_mutes(self, chat_id: int = None):
         """Clear all mutes for given or all chats"""
         if chat_id:
-            mutes = self._db.get("swmute", "mutes", {})
+            mutes = self.get("mutes", {})
             mutes.pop(str(chat_id), None)
-            self._db.set("swmute", "mutes", mutes)
+            self.set("mutes", mutes)
         else:
-            self._db.set("swmute", "mutes", {})
+            self.set("mutes", {})
 
     @loader.group_admin_ban_users
     async def swmutecmd(self, message: Message):
@@ -241,11 +255,11 @@ class SwmuteMod(loader.Module):
 
         if reply and reply.sender_id:
             user_id = reply.sender_id
-            user = await message.client.get_entity(reply.sender_id)
+            user = await self.client.get_entity(reply.sender_id)
             string_time = " ".join(args) if args else False
         elif args:
             try:
-                user = await message.client.get_entity(
+                user = await self.client.get_entity(
                     int(args[0]) if USER_ID_RE.match(args[0]) else args[0]
                 )
                 user_id = get_peer_id(user)
@@ -257,7 +271,7 @@ class SwmuteMod(loader.Module):
 
         if string_time:
             if mute_seconds := s2time(" ".join(args)):
-                self._mute(message.chat_id, user_id, int(time.time() + mute_seconds))
+                self.mute(message.chat_id, user_id, int(time.time() + mute_seconds))
                 return await utils.answer(
                     message,
                     self.strings("muted").format(
@@ -265,7 +279,7 @@ class SwmuteMod(loader.Module):
                     ),
                 )
 
-        self._mute(message.chat_id, user_id)
+        self.mute(message.chat_id, user_id)
         await utils.answer(
             message, self.strings("muted_forever").format(user=get_link(user))
         )
@@ -281,10 +295,10 @@ class SwmuteMod(loader.Module):
 
         if reply and reply.sender_id:
             user_id = reply.sender_id
-            user = await message.client.get_entity(reply.sender_id)
+            user = await self.client.get_entity(reply.sender_id)
         elif args:
             try:
-                user = await message.client.get_entity(
+                user = await self.client.get_entity(
                     int(args[0]) if USER_ID_RE.match(args[0]) else args[0]
                 )
                 user_id = get_peer_id(user)
@@ -293,7 +307,7 @@ class SwmuteMod(loader.Module):
         else:
             return await utils.answer(message, self.strings("no_unmute_target"))
 
-        self._unmute(message.chat_id, user_id)
+        self.unmute(message.chat_id, user_id)
         await utils.answer(message, self.strings("unmuted").format(user=get_link(user)))
 
     @loader.group_admin_ban_users
@@ -302,11 +316,11 @@ class SwmuteMod(loader.Module):
         if not message.is_group:
             return await utils.answer(message, self.strings("not_group"))
 
-        mutes = self._get_mutes(message.chat_id)
+        mutes = self.get_mutes(message.chat_id)
         if not mutes:
             return await utils.answer(message, self.strings("mutes_empty"))
 
-        self._cleanup()
+        self.cleanup()
 
         muted_users = []
         for mute_id in mutes:
@@ -314,13 +328,13 @@ class SwmuteMod(loader.Module):
 
             try:
                 text += (
-                    f"<i>{get_link(await message.client.get_entity(mute_id))}</i> "
+                    f"<i>{get_link(await self.client.get_entity(mute_id))}</i> "
                     f"(<code>{mute_id}</code>)"
                 )
             except ValueError:
                 text += f"<code>{mute_id}</code>"
 
-            if until_ts := self._get_mute_time(message.chat_id, mute_id):
+            if until_ts := self.get_mute_time(message.chat_id, mute_id):
                 time_formatted = self.format_time(
                     int(until_ts - time.time()),
                     max_words=2,
@@ -341,10 +355,10 @@ class SwmuteMod(loader.Module):
         ) and await self.allmodules.check_security(
             message, security.OWNER | security.SUDO
         ):
-            self._clear_mutes()
+            self.clear_mutes()
             await utils.answer(message, self.strings("cleared_all"))
         else:
-            self._clear_mutes(message.chat_id)
+            self.clear_mutes(message.chat_id)
             await utils.answer(message, self.strings("cleared"))
 
     async def watcher(self, message: Message):
@@ -352,7 +366,7 @@ class SwmuteMod(loader.Module):
             isinstance(message, Message)
             and not message.out
             and message.is_group
-            and message.sender_id in self._get_mutes(message.chat_id)
+            and message.sender_id in self.get_mutes(message.chat_id)
         ):
             await message.delete()
 
