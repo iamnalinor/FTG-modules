@@ -39,8 +39,8 @@ class SpeedtestMod(loader.Module):
         "author": "@nalinormods",
         "running": "🕑 <b>Checking your internet speed...</b>",
         "result": (
-            "<b>⬇️ Download: <code>{download}</code> MBit</b>\n"
-            "<b>⬆️ Upload: <code>{upload}</code> MBit</b>\n"
+            "<b>⬇️ Download: <code>{download}</code> MBit/s</b>\n"
+            "<b>⬆️ Upload: <code>{upload}</code> MBit/s</b>\n"
             "<b>🏓 Ping: <code>{ping}</code> ms</b>"
         ),
     }
@@ -50,8 +50,8 @@ class SpeedtestMod(loader.Module):
         "_cmd_doc_speedtest": "Проверить скорость интернета",
         "running": "🕑 <b>Проверяем скорость интернета...</b>",
         "result": (
-            "<b>⬇️ Скачать: <code>{download}</code> МБит</b>\n"
-            "<b>⬆️ Загрузить: <code>{upload}</code> МБит</b>\n"
+            "<b>⬇️ Скачать: <code>{download}</code> МБит/с</b>\n"
+            "<b>⬆️ Загрузить: <code>{upload}</code> МБит/с</b>\n"
             "<b>🏓 Пинг: <code>{ping}</code> мс</b>"
         ),
     }
