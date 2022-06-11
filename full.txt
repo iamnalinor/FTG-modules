@@ -1,3 +1,4 @@
 lavhost
 msgrate
 swmute
+speedtest
