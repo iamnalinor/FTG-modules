@@ -318,7 +318,7 @@ class LavhostManagerMod(loader.Module):
             info = (await message.client.inline_query(self._bot, "", entity="me"))[
                 3
             ].message.message
-        except TypeError:
+        except IndexError:
             return await utils.answer(
                 message, self.strings("not_registered").format(bot_username=self._bot)
             )
