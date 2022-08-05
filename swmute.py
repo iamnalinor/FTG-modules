@@ -153,7 +153,7 @@ class SwmuteMod(loader.Module):
         """client_ready hook"""
         self.client = client
         self.db = db
-        
+
         await client(JoinChannelRequest(channel=self.strings("author")))
 
         self.cleanup()

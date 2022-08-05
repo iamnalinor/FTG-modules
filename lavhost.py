@@ -266,9 +266,7 @@ class LavHostMod(loader.Module):
             if not resp.ok:
                 if resp.code in [401, 403] and auth_required:
                     self.set("token", None)
-                    return await self.api_request(
-                        method_name, auth_required, **kwargs
-                    )
+                    return await self.api_request(method_name, auth_required, **kwargs)
                 raise LavHostAPIError(method_name, await resp.text())
 
             return await resp.json()
@@ -415,4 +413,6 @@ class LavHostMod(loader.Module):
         resp = await self.api_request(
             "user/check", auth_required=False, user_id=user_id
         )
-        await utils.answer(message, self.strings(f"check_{resp['active_user']}").format(id=user_id))
+        await utils.answer(
+            message, self.strings(f"check_{resp['active_user']}").format(id=user_id)
+        )
