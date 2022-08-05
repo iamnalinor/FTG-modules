@@ -64,11 +64,10 @@ class MessagingRateMod(loader.Module):
         "stats_for_chat": "Статистика MpH для чата {title}",
     }
 
-    async def on_dlmod(self, client: TelegramClient, _):
-        await client(JoinChannelRequest(channel=self.strings("author")))
-
     async def client_ready(self, client: TelegramClient, _):
-        self._client = client
+        self.client = client
+
+        await client(JoinChannelRequest(channel=self.strings("author")))
 
     @staticmethod
     def calc_mph(msg1: Message, msg2: Message) -> float:
@@ -95,7 +94,7 @@ class MessagingRateMod(loader.Module):
         self, chat_id: EntityLike, reverse: bool = False
     ) -> Awaitable[Message]:
         """Gets last or first message in chat"""
-        return self._client.iter_messages(chat_id, limit=1, reverse=reverse).__anext__()
+        return self.client.iter_messages(chat_id, limit=1, reverse=reverse).__anext__()
 
     async def msgratecmd(self, message: Message):
         """<chat id/username/current> — Show MpH for chat"""

@@ -148,12 +148,13 @@ class SwmuteMod(loader.Module):
 
     async def on_dlmod(self, client: TelegramClient, _):
         """on_dlmod hook"""
-        await client(JoinChannelRequest(channel=self.strings("author")))
 
     async def client_ready(self, client: TelegramClient, db):
         """client_ready hook"""
         self.client = client
         self.db = db
+        
+        await client(JoinChannelRequest(channel=self.strings("author")))
 
         self.cleanup()
 
