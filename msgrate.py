@@ -32,6 +32,7 @@ from .. import loader, utils
 
 
 # noinspection PyCallingNonCallable,PyAttributeOutsideInit
+# pylint: disable=not-callable,attribute-defined-outside-init,invalid-name
 @loader.tds
 class MessagingRateMod(loader.Module):
     """Show chat activity, counted in MpH (messages per hour)"""

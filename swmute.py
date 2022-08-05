@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 USER_ID_RE = re.compile(r"^(-100)?\d+$")
 
 
+# pylint: disable=invalid-name
 def s2time(string) -> int:
     """Parse time from text `string`"""
     r = {}  # results
@@ -41,7 +42,7 @@ def s2time(string) -> int:
     for time_type in ["mon", "w", "d", "h", "m", "s"]:
         try:
             r[time_type] = int(re.search(rf"(\d+)\s*{time_type}", string)[1])
-        except TypeError as e:
+        except TypeError:
             r[time_type] = 0
 
     return (
@@ -54,6 +55,7 @@ def s2time(string) -> int:
     )
 
 
+# pylint: disable=consider-using-f-string
 def get_link(user: Entity) -> str:
     """Return permanent link to `user`"""
     return "<a href='tg://user?id={id}'>{name}</a>".format(
@@ -76,6 +78,7 @@ def plural_number(n: int) -> str:
 
 
 # noinspection PyCallingNonCallable,PyAttributeOutsideInit
+# pylint: disable=not-callable,attribute-defined-outside-init,invalid-name
 @loader.tds
 class SwmuteMod(loader.Module):
     """Deletes messages from certain users"""
@@ -111,10 +114,12 @@ class SwmuteMod(loader.Module):
 
     strings_ru = {
         "_cls_doc": "Удаляет сообщения от выбранных пользователей",
-        "_cmd_doc_swmute": "<реплай/юзернейм/айди> <время> — Добавить пользователя в список swmute",
-        "_cmd_doc_swunmute": "<реплай/юзернейм/айди> — Удалить пользователя из списка swmute",
+        "_cmd_doc_swmute": "<reply/username/id> <время> — Добавить пользователя в список swmute",
+        "_cmd_doc_swunmute": "<reply/username/id> — Удалить пользователя из списка swmute",
         "_cmd_doc_swmutelist": "Получить пользователей в списке swmute",
-        "_cmd_doc_swmuteclear": "<all> — Удалить всех пользователей из списка swmute в этом/всех чатах",
+        "_cmd_doc_swmuteclear": (
+            "<all> — Удалить всех пользователей из списка swmute в этом/всех чатах"
+        ),
         "not_group": "🚫 <b>Эта команда предназначена только для групп</b>",
         "muted": "🔇 <b>{user} добавлен в список swmute на {time}</b>",
         "muted_forever": "🔇 <b>{user} добавлен в список swmute навсегда</b>",
@@ -142,15 +147,13 @@ class SwmuteMod(loader.Module):
     }
 
     async def on_dlmod(self, client: TelegramClient, _):
+        """on_dlmod hook"""
         await client(JoinChannelRequest(channel=self.strings("author")))
 
     async def client_ready(self, client: TelegramClient, db):
+        """client_ready hook"""
         self.client = client
         self.db = db
-
-        # db migration
-        if mutes := db.get("swmute", "mutes"):
-            self.set("mutes", mutes)
 
         self.cleanup()
 
@@ -193,7 +196,7 @@ class SwmuteMod(loader.Module):
         mutes[chat_id][user_id] = until_time
         self.set("mutes", mutes)
 
-        logger.debug(f"Muted user {user_id} in chat {chat_id}")
+        logger.debug("Muted user %s in chat %s", user_id, chat_id)
 
     def unmute(self, chat_id: int, user_id: int):
         """Remove user from mute list"""
@@ -205,7 +208,7 @@ class SwmuteMod(loader.Module):
             mutes[chat_id].pop(user_id)
         self.set("mutes", mutes)
 
-        logger.debug(f"Unmuted user {user_id} in chat {chat_id}")
+        logger.debug("Unmuted user %s in chat %s", user_id, chat_id)
 
     def get_mutes(self, chat_id: int) -> List[int]:
         """Get current mutes for specified chat"""
@@ -244,7 +247,6 @@ class SwmuteMod(loader.Module):
         else:
             self.set("mutes", {})
 
-    @loader.group_admin_ban_users
     async def swmutecmd(self, message: Message):
         """<reply/username/id> <time> — Add user to swmute list"""
         if not message.is_group:
@@ -284,7 +286,6 @@ class SwmuteMod(loader.Module):
             message, self.strings("muted_forever").format(user=get_link(user))
         )
 
-    @loader.group_admin_ban_users
     async def swunmutecmd(self, message: Message):
         """<reply/username/id> — Remove swmute from user"""
         if not message.is_group:
@@ -310,7 +311,6 @@ class SwmuteMod(loader.Module):
         self.unmute(message.chat_id, user_id)
         await utils.answer(message, self.strings("unmuted").format(user=get_link(user)))
 
-    @loader.group_admin_ban_users
     async def swmutelistcmd(self, message: Message):
         """Get list of swmuted users"""
         if not message.is_group:
@@ -347,7 +347,6 @@ class SwmuteMod(loader.Module):
             message, self.strings("muted_users").format(names="\n".join(muted_users))
         )
 
-    @loader.group_admin_ban_users
     async def swmuteclearcmd(self, message: Message):
         """<all> — Clear all swmutes in this chat/in all chats"""
         if "all" in utils.get_args_raw(
@@ -362,6 +361,7 @@ class SwmuteMod(loader.Module):
             await utils.answer(message, self.strings("cleared"))
 
     async def watcher(self, message: Message):
+        """Handles incoming messages"""
         if (
             isinstance(message, Message)
             and not message.out
@@ -371,5 +371,7 @@ class SwmuteMod(loader.Module):
             await message.delete()
 
             logger.debug(
-                f"Deleted message from user {message.sender_id} in chat {message.chat_id}"
+                "Deleted message from user %s in chat %s",
+                message.sender_id,
+                message.chat_id,
             )
