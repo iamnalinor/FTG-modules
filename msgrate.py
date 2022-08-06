@@ -65,6 +65,7 @@ class MessagingRateMod(loader.Module):
     }
 
     async def client_ready(self, client: TelegramClient, _):
+        """client_ready hook"""
         self.client = client
 
         await client(JoinChannelRequest(channel=self.strings("author")))
@@ -176,8 +177,9 @@ class MessagingRateMod(loader.Module):
         stream.seek(0)
         plt.close(fig)
 
-        await message.client.send_file(
+        await self.client.send_file(
             message.chat_id,
             stream,
+            reply_to=message.reply_to_msg_id,
         )
         await m.delete()
