@@ -264,8 +264,8 @@ class LavHostMod(loader.Module):
             headers={"Authorization": f"Bearer {token}"},
         ) as resp:
             if not resp.ok:
-                if resp.code in [401, 403] and auth_required:
-                    self.set("token", None)
+                if resp.status in [401, 403] and auth_required:
+                    self.set("token", None)  # refetch token
                     return await self.api_request(method_name, auth_required, **kwargs)
                 raise LavHostAPIError(method_name, await resp.text())
 
