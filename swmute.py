@@ -19,7 +19,7 @@
 import logging
 import re
 import time
-from typing import List, Any
+from typing import Any, List
 
 from telethon import TelegramClient
 from telethon.hints import Entity
@@ -27,7 +27,7 @@ from telethon.tl.custom import Message
 from telethon.tl.functions.channels import JoinChannelRequest
 from telethon.utils import get_peer_id
 
-from .. import loader, utils, security
+from .. import loader, security, utils
 
 logger = logging.getLogger(__name__)
 

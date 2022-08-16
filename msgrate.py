@@ -19,14 +19,14 @@
 
 from contextlib import suppress
 from io import BytesIO
-from typing import Awaitable
+from typing import Coroutine
 
 import matplotlib.pyplot as plt
 from telethon import TelegramClient
 from telethon.hints import EntityLike
 from telethon.tl.custom import Message
-from telethon.tl.types import MessageEmpty
 from telethon.tl.functions.channels import JoinChannelRequest
+from telethon.tl.types import MessageEmpty
 
 from .. import loader, utils
 
@@ -34,7 +34,7 @@ from .. import loader, utils
 # noinspection PyCallingNonCallable,PyAttributeOutsideInit
 # pylint: disable=not-callable,attribute-defined-outside-init,invalid-name
 @loader.tds
-class MessagingRateMod(loader.Module):
+class MsgRateMod(loader.Module):
     """Show chat activity, counted in MpH (messages per hour)"""
 
     strings = {
@@ -93,7 +93,7 @@ class MessagingRateMod(loader.Module):
 
     def get_last_msg(
         self, chat_id: EntityLike, reverse: bool = False
-    ) -> Awaitable[Message]:
+    ) -> Coroutine[Message]:
         """Gets last or first message in chat"""
         return self.client.iter_messages(chat_id, limit=1, reverse=reverse).__anext__()
 
@@ -124,10 +124,12 @@ class MessagingRateMod(loader.Module):
         last_msg = await self.get_last_msg(chat_id)
 
         args = utils.get_args(message)
-        if args and len(args[0]) <= 3:
-            colors = "".join([char for char in "rgb" if char in args[0]]) or "rgb"
-        else:
-            colors = "rgb"
+
+        colors = (
+            "".join([char for char in "rgb" if char in args[0]]) or "rgb"
+            if args and len(args[0]) <= 3
+            else "rgb"
+        )
 
         if not last_msg.is_channel:
             return await utils.answer(message, self.strings("channels_only"))
@@ -161,8 +163,8 @@ class MessagingRateMod(loader.Module):
         if "g" in colors:
             plt.plot(x[1:], y2, "g")
 
-        y3 = [(y1[i + 1] + y2[i]) / 2 for i in range(len(x) - 1)]
         if "b" in colors:
+            y3 = [(y1[i + 1] + y2[i]) / 2 for i in range(len(x) - 1)]
             plt.plot(x[1:], y3, "b")
 
         plt.title(

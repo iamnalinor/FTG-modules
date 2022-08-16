@@ -17,10 +17,10 @@
 # meta developer: @nalinormods
 # requires: aiohttp
 
-import logging
 import functools
-from typing import Callable, Any
+import logging
 from datetime import datetime, timedelta
+from typing import Any, Callable
 
 import aiohttp
 from telethon import TelegramClient
