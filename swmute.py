@@ -146,9 +146,6 @@ class SwmuteMod(loader.Module):
         "d_many": "дней",
     }
 
-    async def on_dlmod(self, client: TelegramClient, _):
-        """on_dlmod hook"""
-
     async def client_ready(self, client: TelegramClient, db):
         """client_ready hook"""
         self.client = client

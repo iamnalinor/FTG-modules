@@ -140,7 +140,7 @@ class MessagingRateMod(loader.Module):
         messages = list(
             filter(
                 lambda msg: msg and not isinstance(msg, MessageEmpty),
-                await message.client.get_messages(
+                await self.client.get_messages(
                     chat_id,
                     ids=[int(last_msg.id / 200) * count + 1 for count in range(200)],
                 ),
