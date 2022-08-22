@@ -19,7 +19,7 @@
 
 from contextlib import suppress
 from io import BytesIO
-from typing import Coroutine
+from typing import Awaitable
 
 import matplotlib.pyplot as plt
 from telethon import TelegramClient
@@ -93,7 +93,7 @@ class MsgRateMod(loader.Module):
 
     def get_last_msg(
         self, chat_id: EntityLike, reverse: bool = False
-    ) -> Coroutine[Message]:
+    ) -> Awaitable[Message]:
         """Gets last or first message in chat"""
         return self.client.iter_messages(chat_id, limit=1, reverse=reverse).__anext__()
 
