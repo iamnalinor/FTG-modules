@@ -259,7 +259,7 @@ class LavHostMod(loader.Module):
         token = await self.get_token() if auth_required else ""
 
         async with self.session.get(
-            f"https://api.lavhost.ml/{method_name}",
+            f"https://api.lavhost.su/{method_name}",
             params=kwargs,
             headers={"Authorization": f"Bearer {token}"},
         ) as resp:
@@ -374,7 +374,7 @@ class LavHostMod(loader.Module):
             plan=plan,
             server=server,
             number=number,
-            url=f"{letter.lower()}{number}.lavhost.ml",
+            url=f"{letter.lower()}{number}.lavhost.su",
             userbot=userbot,
             expires=expires,
         )
