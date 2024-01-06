@@ -138,6 +138,8 @@ class MsgRateMod(loader.Module):
             return await utils.answer(message, self.strings("chat_small"))
 
         m = await utils.answer(message, self.strings("calculating"))
+        if isinstance(m, list):
+            m = m[0]
 
         messages = list(
             filter(
