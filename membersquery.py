@@ -135,7 +135,7 @@ class QueryExecutor:
     async def execute(self, query: str) -> NegatableSet:
         """Executes a query"""
 
-        query.replace("&&", "&").replace("||", "|").replace("@", "")
+        query = query.replace("&&", "&").replace("||", "|").replace("@", "")
 
         body = ast.parse(query).body
 
