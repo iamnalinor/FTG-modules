@@ -13,6 +13,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # meta developer: @nalinormods
 
+# Even taking into account the fact I double-checked every math expression,
+# you, as a reader, have to remember that I'm a programmer, not a math expert.
+# Some complicated operations (like symmetric difference on the complement of a set) may go wrong.
+# I'd be glad to see your pull requests here if you find an error.
+
+# Reminder: In the code below I use "negative" and "negatable" sets as a definition for "the complement of a set".
+# It's easier for me to say that a set is "negative" rather than a set is "complement", "completion", "completed", ...
+
 import ast
 import io
 import logging
