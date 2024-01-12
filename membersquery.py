@@ -25,7 +25,6 @@ import ast
 import io
 import logging
 import time
-from functools import lru_cache
 from typing import cast
 
 from telethon import TelegramClient, errors
