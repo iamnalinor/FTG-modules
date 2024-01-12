@@ -28,7 +28,7 @@ import time
 from functools import lru_cache
 from typing import cast
 
-from telethon import TelegramClient
+from telethon import TelegramClient, errors
 from telethon.errors import ChatAdminRequiredError
 from telethon.hints import Entity
 from telethon.tl import types
@@ -243,7 +243,7 @@ class UsersQueryExecutor(QueryExecutor):
 
         try:
             chat = await self.client.get_entity(await self.client.get_input_entity(key))
-        except ValueError:
+        except (ValueError, errors.BadRequestError):
             raise InvalidChatID(key, "invalid chat ID")
 
         if isinstance(chat, types.User):
