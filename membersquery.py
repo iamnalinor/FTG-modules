@@ -243,8 +243,8 @@ class UsersQueryExecutor(QueryExecutor):
 
         try:
             chat = await self.client.get_entity(await self.client.get_input_entity(key))
-        except (ValueError, errors.BadRequestError):
-            raise InvalidChatID(key, "invalid chat ID")
+        except (ValueError, errors.BadRequestError) as e:
+            raise InvalidChatID(key, str(e))
 
         if isinstance(chat, types.User):
             raise InvalidChatID(key, "chat ID belongs to a user")
