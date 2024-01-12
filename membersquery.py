@@ -283,7 +283,9 @@ def format_user(user: Entity, tags: bool = True) -> str:
     name = (
         f"{user.first_name} {user.last_name}"
         if user.last_name
-        else user.first_name if user.first_name else "Deleted Account"
+        else user.first_name
+        if user.first_name
+        else "Deleted Account"
     )
 
     if tags:
