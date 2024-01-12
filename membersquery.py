@@ -329,10 +329,11 @@ Each group is represented by a set of its members (see set theory). You can use 
 """,
         "no_args": "❌ <b>Specify at least one group</b>",
         "syntax_error": (
-            "❌ <b>You have an error in your syntax:</b>\n<code>{error}</code>"
+            "❌ <b>You have an syntax error in query"
+            " <code>{query}</code>:</b>\n<code>{error}</code>"
         ),
         "invalid_chat_id": "❌ <b>Invalid chat ID {chat_id}:</b>\n<code>{error}</code>",
-        "running": "🕑 <b>Executing query...</b>",
+        "running": "🕑 <b>Executing query <code>{query}</code>...</b>",
         "no_results": "🚫 <b>No results found</b> for query <code>{query}</code>",
         "results": "🔍 <b>{n} users found</b> for query <code>{query}</code>",
         "results_file": "📤 <b>The list is too long, so it's sent in file.</b>",
@@ -378,12 +379,13 @@ Each group is represented by a set of its members (see set theory). You can use 
         """,
         "no_args": "❌ <b>Укажите хотя бы одну группу</b>",
         "syntax_error": (
-            "❌ <b>В запросе есть синтаксическая ошибка:</b>\n<code>{error}</code>"
+            "❌ <b>В запросе <code>{query}</code> есть синтаксическая"
+            " ошибка:</b>\n<code>{error}</code>"
         ),
         "invalid_chat_id": (
             "❌ <b>Неверный ID/юзернейм чата {chat_id}:</b>\n<code>{error}</code>"
         ),
-        "running": "🕑 <b>Запрос выполняется...</b>",
+        "running": "🕑 <b>Запрос <code>{query}</code> выполняется...</b>",
         "no_results": "🚫 <b>Результаты не найдены</b> по запросу <code>{query}</code>",
         "results": (
             "🔍 <b>Пользователей найдено: {n}</b> по запросу <code>{query}</code>"
@@ -451,7 +453,7 @@ Each group is represented by a set of its members (see set theory). You can use 
         if not text:
             return await utils.answer(message, self.strings("usage"))
 
-        m = await utils.answer(message, self.strings("running"))
+        m = await utils.answer(message, self.strings("running").format(query=text))
         if isinstance(m, list):
             m = m[0]
 
@@ -463,7 +465,9 @@ Each group is represented by a set of its members (see set theory). You can use 
             else:
                 result = await executor.execute(text)
         except SyntaxError as e:
-            await utils.answer(m, self.strings("syntax_error").format(error=e))
+            await utils.answer(
+                m, self.strings("syntax_error").format(error=e, query=text)
+            )
             return
         except InvalidChatID as e:
             await utils.answer(
