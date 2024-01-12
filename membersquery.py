@@ -24,6 +24,7 @@
 import ast
 import io
 import logging
+import time
 from functools import lru_cache
 from typing import cast
 
@@ -218,6 +219,9 @@ class QueryExecutor:
         raise SyntaxError(f"operator {expr.__class__.__name__} is not supported")
 
 
+members_cache: "dict[int | str, tuple[dict[int], float]]" = {}
+
+
 class UsersQueryExecutor(QueryExecutor):
     def __init__(self, client: TelegramClient):
         super().__init__()
@@ -225,11 +229,11 @@ class UsersQueryExecutor(QueryExecutor):
         self.users: "dict[int]" = {}
         self.client = client
 
-    @lru_cache
     async def fetch_set(self, key: "int | str") -> NegatableSet:
         if key in ["me", "self"]:
             me = await self.client.get_me()
             self.users[me.id] = me
+
             return NegatableSet([me.id])
 
         try:
@@ -245,14 +249,23 @@ class UsersQueryExecutor(QueryExecutor):
         if isinstance(chat, types.User):
             raise InvalidChatID(key, "chat ID belongs to a user")
 
-        logger.debug("Fetching participants for %s", key)
-        try:
-            members = {
-                member.id: member
-                async for member in self.client.iter_participants(chat.id)
-            }
-        except ChatAdminRequiredError:
-            raise InvalidChatID(key, "insufficient privileges to view users in chat")
+        if key in members_cache and members_cache[key][1] > time.perf_counter():
+            logger.debug("Using cached participants for %s", key)
+            members = members_cache[key][0]
+        else:
+            logger.debug("Fetching participants for %s", key)
+            try:
+                members = {
+                    member.id: member
+                    async for member in self.client.iter_participants(chat.id)
+                }
+            except ChatAdminRequiredError:
+                raise InvalidChatID(
+                    key, "insufficient privileges to view users in chat"
+                )
+
+            members_cache[key] = (members, time.perf_counter() + 600)
+
         self.users.update(members)
 
         return NegatableSet(members.keys())
@@ -311,6 +324,8 @@ Each group is represented by a set of its members (see set theory). You can use 
 <code>@nalinormods & ~@nalinormodschat</code> — subscribers of a channel that didn't join a group yet
 <code>hikka_ub | hikka_talks | hikka_offtop</code> — members of any of these groups
 <code>-1001234567890 - me</code> — members of a private group except yourself
+
+ℹ️ In order to increase performance, the module caches members of list for 10 minutes. Reload the module or restart the userbot to clear the cache.
 """,
         "no_args": "❌ <b>Specify at least one group</b>",
         "syntax_error": (
@@ -328,7 +343,9 @@ Each group is represented by a set of its members (see set theory). You can use 
     }
 
     strings_ru = {
-        "_cls_doc": "Поиск пересечения групп на предмет наличия одних и тех же пользователей",
+        "_cls_doc": (
+            "Поиск пересечения групп на предмет наличия одних и тех же пользователей"
+        ),
         "_cmd_doc_mjoin": (
             "<юзернейм/ID группы> ... — Найти пользователей, которые находятся во всех"
             " заданных группах одновременно"
