@@ -2,3 +2,4 @@ lavhost
 msgrate
 swmute
 speedtest
+membersquery
