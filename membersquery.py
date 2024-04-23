@@ -326,7 +326,7 @@ Each group is represented by a set of its members (see set theory). You can use 
 <code>hikka_ub | hikka_talks | hikka_offtop</code> — members of any of these groups
 <code>-1001234567890 - me</code> — members of a private group except yourself
 
-ℹ️ In order to increase performance, the module caches members of list for 10 minutes. Reload the module or restart the userbot to clear the cache.
+ℹ️ In order to increase performance, the module caches the list of members for 10 minutes. Reload the module or restart the userbot to clear the cache.
 """,
         "no_args": "❌ <b>Specify at least one group</b>",
         "syntax_error": (
@@ -377,6 +377,8 @@ Each group is represented by a set of its members (see set theory). You can use 
 <code>@nalinormods & ~@nalinormodschat</code> — подписчики канала, которые ещё не вступили в группу
 <code>hikka_ub | hikka_talks | hikka_offtop</code> — участники любой из этих групп
 <code>-1001234567890 - me</code> — участники приватной группы, кроме тебя
+
+ℹ️ В целях производительности, модуль кэширует список участников на 10 минут. Перезагрузите модуль или весь юзербот, чтобы очистить кэш.
         """,
         "no_args": "❌ <b>Укажите хотя бы одну группу</b>",
         "syntax_error": (
