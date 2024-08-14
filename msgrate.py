@@ -46,7 +46,7 @@ class MsgRateMod(loader.Module):
         "chat_small": "🚫 <b>Messaging history of this chat is too small</b>",
         "calculating": "🕑 <b>Calculating, please wait..</b>",
         "messages_count": "Messages count",
-        "mph": "MpH",
+        "average_mph": "Average messages per hour",
         "stats_for_chat": "MpH stats for chat {title}",
     }
 
@@ -60,7 +60,7 @@ class MsgRateMod(loader.Module):
         "chat_small": "🚫 <b>История сообщений этого чата слишком мала</b>",
         "calculating": "🕑 <b>Рассчитываем, пожалуйста, подождите..</b>",
         "messages_count": "Количество сообщений",
-        "mph": "MpH",
+        "average_mph": "Среднее кол-во сообщений в час",
         "stats_for_chat": "Статистика MpH для чата {title}",
     }
 
@@ -123,18 +123,10 @@ class MsgRateMod(loader.Module):
         chat_id = self.get_chat_id(message)
         last_msg = await self.get_last_msg(chat_id)
 
-        args = utils.get_args(message)
-
-        colors = (
-            "".join([char for char in "rgb" if char in args[0]]) or "rgb"
-            if args and len(args[0]) <= 3
-            else "rgb"
-        )
-
         if not last_msg.is_channel:
             return await utils.answer(message, self.strings("channels_only"))
 
-        if last_msg.id < 200:
+        if last_msg.id <= 200:
             return await utils.answer(message, self.strings("chat_small"))
 
         m = await utils.answer(message, self.strings("calculating"))
@@ -152,22 +144,17 @@ class MsgRateMod(loader.Module):
         )
 
         fig = plt.figure()
+
+        x = [msg.id for msg in messages[:-1]]
+        y = [
+            self.calc_mph(first, second)
+            for first, second
+            in zip(messages, messages[1:])
+        ]
+
         plt.xlabel(self.strings("messages_count"))
-        plt.ylabel(self.strings("mph"))
-
-        x = [msg.id for msg in messages]
-
-        y1 = [self.calc_mph(last_msg, msg) for msg in messages]
-        if "r" in colors:
-            plt.plot(x, y1, "r")
-
-        y2 = [self.calc_mph(msg, messages[0]) for msg in messages[1:]]
-        if "g" in colors:
-            plt.plot(x[1:], y2, "g")
-
-        if "b" in colors:
-            y3 = [(y1[i + 1] + y2[i]) / 2 for i in range(len(x) - 1)]
-            plt.plot(x[1:], y3, "b")
+        plt.ylabel(self.strings("average_mph"))
+        plt.plot(x, y, "r")
 
         plt.title(
             self.strings("stats_for_chat").format(
